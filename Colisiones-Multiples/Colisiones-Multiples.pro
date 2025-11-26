@@ -7,4 +7,5 @@ SOURCES += \
         main.cpp
 
 HEADERS += \
+    obstaculo.h \
     particle.h
