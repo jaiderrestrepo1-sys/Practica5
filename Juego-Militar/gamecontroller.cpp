@@ -1,35 +1,71 @@
-#ifndef GAMECONTROLLER_H
-#define GAMECONTROLLER_H
+#include "gamecontroller.h"
+#include "projectile.h"
+#include "obstaculo.h"
+#include <cmath>
 
-#include <QObject>
-#include <QGraphicsScene>
-#include <vector>
+GameController::GameController(QGraphicsScene *scene_, QObject *parent)
+    : QObject(parent), scene(scene_)
+{
+}
 
-class GameController : public QObject {
-    Q_OBJECT
+void GameController::colocarObstaculo(int x, int y, int resistencia, int jugador)
+{
+    Obstaculo *o = new Obstaculo(resistencia, jugador);
+    o->setPos(x, y);
+    scene->addItem(o);
 
-public:
-    GameController(QGraphicsScene *scene, QObject *parent = nullptr);
+    if (jugador == 1) {
+        vida1 += resistencia;
+        obs1++;
+    } else {
+        vida2 += resistencia;
+        obs2++;
+    }
+}
 
-    void colocarObstaculo(int x, int y, int resistencia, int jugador);
-    void lanzar(double angulo_deg, double velocidad);
+void GameController::lanzar(double angulo_deg, double velocidad)
+{
+    double rad = angulo_deg * M_PI / 180.0;
+    double vx = velocidad * std::cos(rad);
+    double vy = -velocidad * std::sin(rad);
 
-    int turnoActual() const { return turno; }
+    double px = (turno == 1) ? 50 : (scene->width() - 50);
+    double py = scene->height() - 50;
 
-signals:
-    void progreso(int vida1, int vida2);
-    void jugadorGana(int jugador);
-    void turnoCambiado(int turno);
+    Projectile *p = new Projectile(vx, vy, 5);
+    p->setPos(px, py);
+    scene->addItem(p);
 
-public slots:
-    void procesarImpacto(int d);
+    connect(p, &Projectile::impacto, this, &GameController::procesarImpacto);
 
-private:
-    QGraphicsScene *scene;
-    int turno = 1;
+    turno = (turno == 1 ? 2 : 1);
+    emit turnoCambiado(turno);
+}
 
-    int vida1 = 0, vida2 = 0;
-    int obs1 = 0, obs2 = 0;
-};
+void GameController::procesarImpacto(int d)
+{
+    for (auto *item : scene->items()) {
+        if (item->data(0).toInt() == 1) {
 
-#endif
+            Obstaculo *o = static_cast<Obstaculo*>(item);
+            int jugador = o->jugadorDueño;
+
+            o->recibirDano(d);
+
+            if (jugador == 1) {
+                vida1 -= d;
+                if (o->resistencia() <= 0) obs1--;
+            } else {
+                vida2 -= d;
+                if (o->resistencia() <= 0) obs2--;
+            }
+
+            emit progreso(vida1, vida2);
+
+            if (obs1 == 0) emit jugadorGana(2);
+            if (obs2 == 0) emit jugadorGana(1);
+
+            break;
+        }
+    }
+}

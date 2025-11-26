@@ -12,7 +12,8 @@ SOURCES += \
     gamecontroller.cpp \
     main.cpp \
     mainwindow.cpp \
-    obstaculo.cpp
+    obstaculo.cpp \
+    projectile.cpp
 
 HEADERS += \
     gamecontroller.h \

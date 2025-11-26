@@ -28,4 +28,4 @@ private:
     QTimer *timer;
 };
 
-#endif // PROJECTILE_H
+#endif

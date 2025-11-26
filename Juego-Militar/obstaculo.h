@@ -15,4 +15,4 @@ private:
     int m_resistencia;
 };
 
-#endif // OBSTACULO_H
+#endif
