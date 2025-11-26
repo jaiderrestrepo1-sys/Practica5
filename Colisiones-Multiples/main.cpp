@@ -70,3 +70,42 @@ void colisionObstaculo(Particle &p, const Obstaculo &o, double e, ofstream &file
     file << fixed << setprecision(3) << "COL_OBS " << tiempo << " P" << p.id << " OBS" << o.id
          << " N(" << nx << "," << ny << ")\n";
 }
+
+void fusionParticulas(Particle &a, Particle &b, ofstream &file, double tiempo) {
+    // A Y B ACTIVOS Y CHOCANDO
+    double m1 = a.masa, m2 = b.masa;
+    double mF = m1 + m2;
+
+    // VELOCIDAD RESULTANTE
+    double vxF = (m1 * a.vx + m2 * b.vx) / mF;
+    double vyF = (m1 * a.vy + m2 * b.vy) / mF;
+
+    // CENTRO DE MASA COMO POSICION NUEVA
+    double xCM = (m1 * a.x + m2 * b.x) / mF;
+    double yCM = (m1 * a.y + m2 * b.y) / mF;
+
+    a.masa = mF;
+    a.vx = vxF;
+    a.vy = vyF;
+    a.x = xCM;
+    a.y = yCM;
+
+    a.radio = sqrt(a.radio * a.radio + b.radio * b.radio);
+
+    b.activa = false;
+
+    file << fixed << setprecision(3) << "FUSION " << tiempo << " P" << a.id << " += P" << b.id
+         << " -> masa=" << a.masa << " vx=" << a.vx << " vy=" << a.vy << "\n";
+}
+
+void colisionParticulas(Particle &a, Particle &b, ofstream &file, double tiempo) {
+    if (!a.activa || !b.activa) return;
+
+    double dx = b.x - a.x;
+    double dy = b.y - a.y;
+    double dist = sqrt(dx*dx + dy*dy);
+
+    if (dist <= a.radio + b.radio) {
+        fusionParticulas(a, b, file, tiempo);
+    }
+}
