@@ -109,3 +109,67 @@ void colisionParticulas(Particle &a, Particle &b, ofstream &file, double tiempo)
         fusionParticulas(a, b, file, tiempo);
     }
 }
+
+int main() {
+    const double dt = 0.05;
+    const double ancho = 200.0;
+    const double alto = 150.0;
+    const double coeffRestitucionObs = 0.6;
+
+    //CREAR PARTICULAS
+    vector<Particle> P;
+    P.emplace_back(0, 20, 20,  30, 10, 2.0, 4.0);
+    P.emplace_back(1, 60, 40, -20, 15, 2.0, 4.0);
+    P.emplace_back(2, 100, 80, -10, -25,2.0, 4.0);
+    P.emplace_back(3, 150, 30, -15, 20, 2.0, 4.0);
+
+    // 4 OBSTACULOS
+    vector<Obstaculo> O;
+    O.emplace_back(0, 50, 50, 20);
+    O.emplace_back(1, 120, 40, 20);
+    O.emplace_back(2, 90, 100, 20);
+    O.emplace_back(3, 160, 110, 20);
+
+    ofstream file("salida.txt");
+    file << "Simulacion inicio\n";
+
+    const int pasos = 2000;
+    for (int paso = 0; paso < pasos; ++paso) {
+        double tiempo = paso * dt;
+        file << "TIEMPO " << fixed << setprecision(3) << tiempo << "\n";
+
+        // PARTICULA ACTUALIZADA
+        for (int i = 0; i < (int)P.size(); ++i) {
+            if (!P[i].activa) continue;
+
+            P[i].actualizar(dt);
+
+            // colisión con paredes (elástica)
+            //COLISION CON PAREDES ELASTICAS
+            colisionPared(P[i], ancho, alto, file, tiempo);
+
+            // COLISION CON OBSTACULOS
+            for (const auto &obs : O)
+                colisionObstaculo(P[i], obs, coeffRestitucionObs, file, tiempo);
+        }
+
+        // cOLISIONES INELASTICAS
+        for (int i = 0; i < (int)P.size(); ++i)
+            for (int j = i + 1; j < (int)P.size(); ++j)
+                colisionParticulas(P[i], P[j], file, tiempo);
+
+        // ESCRIBIR POSICIONES
+        for (const auto &p : P) {
+            if (!p.activa) continue;
+            file << "P" << p.id << " POS " << p.x << " " << p.y << " V " << p.vx << " " << p.vy << " M " << p.masa << "\n";
+        }
+
+        file << "-----\n";
+    }
+
+    file << "Simulacion fin\n";
+    file.close();
+
+    cout << "Simulacion completa. Ver 'salida.txt'.\n";
+    return 0;
+}
