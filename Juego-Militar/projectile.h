@@ -11,8 +11,7 @@ class Projectile : public QObject, public QGraphicsEllipseItem {
     Q_OBJECT
 
 public:
-    explicit Projectile(double vx, double vy, double masa, QGraphicsItem *parent = nullptr);
-    ~Projectile() override = default;
+    Projectile(double vx, double vy, double masa, QGraphicsItem *parent = nullptr);
 
     double vx;
     double vy;
@@ -26,7 +25,7 @@ public slots:
     void mover();
 
 private:
-    QTimer *m_timer;
+    QTimer *timer;
 };
 
 #endif // PROJECTILE_H
